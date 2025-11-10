@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salt Bank: CI - Model vechi - by M.P.</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 20px;
+  background: url('https://www.transparenttextures.com/patterns/wood-pattern.png') repeat;
+  background-color: #d2a679;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body.nobg {
+  background: none !important;
+  background-color: white !important;
+}
+
+
+button {
+  padding: 8px 16px;
+  margin: 5px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.3);
+  background: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+button:hover { background: #41e5a1; }
+
+.id-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  transform: scale(1.0);
+}
+
+.id-card {
+  width: 18.24cm;
+  height: 13.08cm;
+  object-fit: cover;
+  border-radius: 14.4px;
+  box-shadow: 0 12px 33.6px rgba(0, 0, 0, 0.35);
+  border: 0.2px solid #ddd;
+  background-color: white;
+  animation: fadeIn 0.6s ease-out;
+  z-index: 0;
+}
+
+.no-shadow {
+  box-shadow: none !important;
+}
+
+.portrait {
+  position: absolute;
+  top: 2.52cm;
+  left: 1.08cm;
+  width: 4.8cm;
+  height: 6.24cm;
+  border-radius: 0px;
+  object-fit: cover;
+  background-color: #f8f8f8;
+  z-index: 1;
+}
+
+.portrait-ghost {
+  position: absolute;
+  top: 2.78cm;
+  right: 1.3cm;
+  width: 2.45cm;
+  height: 3cm;
+  border-radius: 0px;
+  object-fit: cover;
+  opacity: 0.2;
+  filter: grayscale(80%) brightness(120%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.custom-text {
+  position: absolute;
+  top: 21.5cm;    /* slightly below the image */
+  //left: 2cm;
+  align-items: center;
+  justify-content: center;
+  font-family: "OCR-B 10 BT", monospace;
+  font-size: 16px; /* adjust as needed */
+  color: black;
+  z-index: 5;
+}
+
+.custom-image {
+  position: absolute;
+  top: 18.5cm;       /* adjust as needed */
+  //left: 32cm;       /* adjust as needed */
+  align-items: center;
+  justify-content: center;
+  width: 5cm;      /* adjust as needed */
+  height: 3cm;     /* adjust as needed */
+  object-fit: contain; /* preserves transparency */
+  z-index: 4;      /* above background but below MRZ maybe */
+}
+
+@font-face {
+  font-family: "OCR-B 10 BT";
+  src: url("OCR-B10BT.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+.text-field {
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  position: absolute;
+  font-family: "OCR-B 10 BT", monospace;
+  //font-family: "OCR-B 10 BT", "Courier New", monospace;
+  //font-weight: bold;
+  //text-rendering: geometricPrecision;
+  font-size: 24.2px;
+  color: black;
+  //letter-spacing: -3.5px;
+  letter-spacing: -0.125em; /* ≈ -% of font size */
+  z-index: 3;
+}
+
+.mrz {
+  font-family: "OCR-B 10 BT", monospace;
+  font-size: 24.2px;
+  letter-spacing: 2.5px; /* Adjust this for wider/narrower MRZ characters */
+  //letter-spacing: -0.125em; 
+	}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+</style>
+</head>
+<body>
+
+<div style="display:flex; gap:10px; margin-bottom:50px; z-index: 5;">
+  <button onclick="generateIDElements('M')">♂️ Generate Male ID</button>
+  <button onclick="generateIDElements('F')">♀️ Generate Female ID</button>
+  <button onclick="generateIDElements(),refreshPortraits()">🎲 Random ID</button>
+  <button onclick="toggleBackground()">🖼️ Toggle Background</button>
+  <button onclick="downloadPNG()">Download as PNG (Coming soon⌛)</button>
+  <button onclick="refreshPortraits()">📸 Refresh Portraits</button>
+</div>
+
+<div class="id-container" id="idCard">
+  <img src="buletin-specimen.jpg" class="id-card">
+
+  <img id="ghostPortrait" class="portrait-ghost">
+  <img id="mainPortrait" class="portrait">
+
+  <div id="series_text" class="text-field" style="top:2.65cm; left:11.15cm;"></div>
+  <div id="number_text" class="text-field" style="top:2.65cm; left:12.712cm;"></div>
+  <div id="cnp_text" class="text-field" style="top:3.18cm; left:6.85cm;"></div>
+  <div id="sex_text" class="text-field" style="top:6.10cm; left:16.65cm;"></div>
+  <div id="firstname_text" class="text-field" style="top:5.1cm; left:6.05cm;"></div>
+  <div id="lastname_text" class="text-field" style="top:4.22cm; left:6.05cm;"></div>
+  <div id="birthplace_text" class="text-field" style="top:7.0cm; left:6cm;"></div>
+  <div id="addressline1_text" class="text-field" style="top:7.95cm; left:6cm;"></div>
+  <div id="addressline2_text" class="text-field" style="top:8.5cm; left:6.07cm;"></div>
+
+  <div id="code_text" class="text-field" style="top:9.2cm; left:1.65cm;">SLT</div>
+  <div id="short_code_text" class="text-field" style="top:9.2cm; left:4.65cm;">QA</div>
+  <div id="issued_text" class="text-field" style="top:9.57cm; left:6cm;">Poliția SALT BANK</div>
+  <div id="nationality_text" class="text-field" style="top:6.07cm; left:6cm;">România / ROU</div>
+  <div id="key_text" class="text-field" style="top:3.73cm; left:14.5cm;">S4L71</div>
+  <div id="validity_text" class="text-field" style="top:9.57cm; left:12.5cm;"></div>
+
+  <!-- MRZ lines -->
+	<div id="mrz_line1" class="text-field mrz" style="top:10.6cm; left:1.55cm;"></div>
+	<div id="mrz_line2" class="text-field mrz" style="top:11.7cm; left:1.55cm;"></div>
+</div>
+
+	<!-- New custom image -->
+	<img id="customImage" class="custom-image">
+	<!-- New text under the image -->
+	<div id="customText" class="text-field custom-text"></div>
+
+
+<script>
+const romanianFirstNames = [
+  "ANDREI","IOANA","MIHAI","ELENA","GABRIEL","MARIA","STEFAN","ANA","CRISTIAN","ALINA",
+  "VLAD","LAURA","DANIEL","ROXANA","ALEXANDRU","IRINA","PAUL","CRINA","CIPRIAN","OANA",
+  "SORIN","LILIANA","NICU","MONICA","VALENTIN","ADRIANA","TEODOR","CARMEN","RADU","GEORGE",
+  "IOAN","EMILIA","DORIN","VERONICA","MIRELA","DAN","ADINA","FLORIN","NICOLETA","ALEXANDRA"
+];
+
+const romanianMaleFirstNames = [
+  "ANDREI","MIHAI","GABRIEL","STEFAN","CRISTIAN","VLAD","DANIEL","ALEXANDRU","PAUL","CIPRIAN",
+  "SORIN","NICU","VALENTIN","TEODOR","RADU","GEORGE","IOAN","DORIN","DAN","FLORIN"
+];
+
+const romanianFemaleFirstNames = [
+  "IOANA","ELENA","MARIA","ANA","ALINA","LAURA","ROXANA","IRINA","CRINA","OANA",
+  "LILIANA","MONICA","ADRIANA","CARMEN","EMILIA","VERONICA","MIRELA","ADINA","NICOLETA","ALEXANDRA"
+];
+
+
+const romanianLastNames = [
+  "POPESCU","IONESCU","STANESCU","DUMITRESCU","MARINESCU","GEORGESCU","RADU","CONSTANTINESCU","NICULAE","ILIESCU",
+  "PETRESCU","VASILESCU","TOMA","ENESCU","SANDU","TUDOR","VOICU","FILIP","BALAN","LUPU",
+  "CIUBOTARU","RUSU","DIACONESCU","DRAGOMIR","STOICA","MUNTEANU","NEAGU","PAVEL","GRIGORE","IONESCU",
+  "DANESCU","COSTACHE","MARIN","SAVA","CĂLIN","BĂLAN","STĂNESCU","MOCANU","CRĂCIUN","TĂNASE"
+];
+
+const countyData = {
+  "B": {
+    name: "BUCUREȘTI",
+    cnp: ["40", "41", "42", "43", "44", "45", "46"],
+    series: ["DP", "DR", "DT", "RD", "RR", "RT", "RX", "RK"],
+    cities: ["Sector 1", "Sector 2", "Sector 3", "Sector 4", "Sector 5", "Sector 6"]
+  },
+  "AB": { name: "ALBA", cnp: "01", series: "AX", cities: ["Alba Iulia", "Aiud", "Sebeș"] },
+  "AR": { name: "ARAD", cnp: "02", series: "AR", cities: ["Arad", "Nădlac", "Ineu"] },
+  "AG": { name: "ARGEȘ", cnp: "03", series: "AS", cities: ["Pitești", "Câmpulung", "Mioveni"] },
+  "BC": { name: "BACĂU", cnp: "04", series: "XC", cities: ["Bacău", "Moinești", "Onești"] },
+  "BH": { name: "BIHOR", cnp: "05", series: "XH", cities: ["Oradea", "Salonta", "Marghita"] },
+  "BN": { name: "BISTRIȚA-NĂSĂUD", cnp: "06", series: "XB", cities: ["Bistrița", "Năsăud", "Beclean"] },
+  "BT": { name: "BOTOȘANI", cnp: "07", series: ["XT", "ZT"], cities: ["Botoșani", "Dorohoi", "Săveni"] },
+  "BV": { name: "BRAȘOV", cnp: "08", series: ["BV", "ZV"], cities: ["Brașov", "Făgăraș", "Săcele"] },
+  "BR": { name: "BRĂILA", cnp: "09", series: "XR", cities: ["Brăila", "Ianca", "Făurei"] },
+  "BZ": { name: "BUZĂU", cnp: "10", series: "XZ", cities: ["Buzău", "Râmnicu Sărat", "Pogoanele"] },
+  "CS": { name: "CARAȘ-SEVERIN", cnp: "11", series: "KS", cities: ["Reșița", "Caransebeș", "Oravița"] },
+  "CL": { name: "CĂLĂRAȘI", cnp: "51", series: "KL", cities: ["Călărași", "Oltenița", "Lehliu Gară"] },
+  "CJ": { name: "CLUJ", cnp: "12", series: "KX", cities: ["Cluj-Napoca", "Turda", "Dej"] },
+  "CT": { name: "CONSTANȚA", cnp: "13", series: "KT", cities: ["Constanța", "Mangalia", "Medgidia"] },
+  "CV": { name: "COVASNA", cnp: "14", series: "KV", cities: ["Sfântu Gheorghe", "Târgu Secuiesc"] },
+  "DB": { name: "DÂMBOVIȚA", cnp: "15", series: "DD", cities: ["Târgoviște", "Moreni", "Pucioasa"] },
+  "DJ": { name: "DOLJ", cnp: "16", series: "DX", cities: ["Craiova", "Calafat", "Băilești"] },
+  "GL": { name: "GALAȚI", cnp: "17", series: "GL", cities: ["Galați", "Tecuci", "Târgu Bujor"] },
+  "GR": { name: "GIURGIU", cnp: "52", series: "GG", cities: ["Giurgiu", "Bolintin-Vale"] },
+  "GJ": { name: "GORJ", cnp: "18", series: "GZ", cities: ["Târgu Jiu", "Motru", "Rovinari"] },
+  "HR": { name: "HARGHITA", cnp: "19", series: "HR", cities: ["Miercurea Ciuc", "Odorheiu Secuiesc"] },
+  "HD": { name: "HUNEDOARA", cnp: "20", series: "HD", cities: ["Deva", "Hunedoara", "Petroșani"] },
+  "IL": { name: "IALOMIȚA", cnp: "21", series: "SZ", cities: ["Slobozia", "Fetești", "Țăndărei"] },
+  "IS": { name: "IAȘI", cnp: "22", series: "MX", cities: ["Iași", "Pașcani", "Târgu Frumos"] },
+  "IF": { name: "ILFOV", cnp: "23", series: "IF", cities: ["Buftea", "Otopeni", "Voluntari"] },
+  "MM": { name: "MARAMUREȘ", cnp: "24", series: "MM", cities: ["Baia Mare", "Sighetu Marmației"] },
+  "MH": { name: "MEHEDINȚI", cnp: "25", series: "MH", cities: ["Drobeta-Turnu Severin", "Strehaia"] },
+  "MS": { name: "MUREȘ", cnp: "26", series: "ZS", cities: ["Târgu Mureș", "Reghin", "Sighișoara"] },
+  "NT": { name: "NEAMȚ", cnp: "27", series: "NT", cities: ["Piatra-Neamț", "Roman", "Târgu Neamț"] },
+  "OT": { name: "OLT", cnp: "28", series: "OT", cities: ["Slatina", "Caracal"] },
+  "PH": { name: "PRAHOVA", cnp: "29", series: "PH", cities: ["Ploiești", "Câmpina", "Mizil"] },
+  "SM": { name: "SATU MARE", cnp: "30", series: "SM", cities: ["Satu Mare", "Carei"] },
+  "SJ": { name: "SĂLAJ", cnp: "31", series: "SX", cities: ["Zalău", "Jibou"] },
+  "SB": { name: "SIBIU", cnp: "32", series: "SB", cities: ["Sibiu", "Mediaș", "Agnita"] },
+  "SV": { name: "SUCEAVA", cnp: "33", series: "SV", cities: ["Suceava", "Rădăuți", "Fălticeni"] },
+  "TR": { name: "TELEORMAN", cnp: "34", series: "TR", cities: ["Alexandria", "Turnu Măgurele"] },
+  "TM": { name: "TIMIȘ", cnp: "35", series: "TM", cities: ["Timișoara", "Lugoj", "Sânnicolau Mare"] },
+  "TL": { name: "TULCEA", cnp: "36", series: "TC", cities: ["Tulcea", "Babadag"] },
+  "VS": { name: "VASLUI", cnp: "37", series: "VS", cities: ["Vaslui", "Bârlad", "Huși"] },
+  "VL": { name: "VÂLCEA", cnp: "38", series: "VX", cities: ["Râmnicu Vâlcea", "Drăgășani"] },
+  "VN": { name: "VRANCEA", cnp: "39", series: "VN", cities: ["Focșani", "Adjud"] }
+};
+
+
+function toggleBackground() {
+  document.body.classList.toggle("nobg");
+  
+  // Toggle box-shadow on all .id-card elements
+  document.querySelectorAll(".id-card").forEach(card => {
+    card.classList.toggle("no-shadow");
+  });
+}
+
+
+function removeDiacritics(str) {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/Ș|ș/g, "S").replace(/Ț|ț/g, "T");
+}
+
+function refreshPortraits() {
+  // Randomly choose male or female
+  const isMale = Math.random() < 0.5; // 50/50 chance
+
+  // Randomly pick 1, 2, or 3
+  const randNum = Math.floor(Math.random() * 4) + 1;
+
+  // Build the file path
+  const faceURL = isMale
+    ? `./id_photos/id-male${randNum}.png`
+    : `./id_photos/id-female${randNum}.png`;
+
+  // Update both portraits
+  document.getElementById("mainPortrait").src = faceURL;
+  document.getElementById("ghostPortrait").src = faceURL;
+}
+
+
+function checkDigit(str) {
+  const weights = [7,3,1];
+  let sum = 0;
+  for (let i = 0; i < str.length; i++) {
+    let char = str[i];
+    let val;
+    if (char >= '0' && char <= '9') val = parseInt(char);
+    else if (char >= 'A' && char <= 'Z') val = char.charCodeAt(0) - 55;
+    else val = 0;
+    sum += val * weights[i % 3];
+  }
+  return (sum % 10).toString();
+}
+
+function addCustomImageAndText() {
+  const customImg = document.getElementById("customImage");
+  const customText = document.getElementById("customText");
+
+  // Load image from root folder
+  customImg.src = "./salt-bank-logo.png"; // your PNG file in project root
+
+  // Set custom text
+  customText.textContent = "Fake Romanian IDs for test purposes only! (please refresh if in the portrait is NOT an adult.) ⚠️"; 
+}
+
+
+function generateIDElements(forcedSex = null) {
+
+
+  const countyCodes = Object.keys(countyData);
+  const birthplaceCounty = countyCodes[Math.floor(Math.random() * countyCodes.length)];
+  const birthplace = countyData[birthplaceCounty];
+  const birthplaceCity = birthplace.cities[Math.floor(Math.random() * birthplace.cities.length)];
+  document.getElementById("birthplace_text").textContent = `Jud.${birthplaceCounty} Orș.${birthplaceCity}`;
+  document.getElementById("short_code_text").textContent = birthplaceCounty;
+
+
+  let addressCounty;
+  do { addressCounty = countyCodes[Math.floor(Math.random() * countyCodes.length)]; } 
+  while (addressCounty === birthplaceCounty);
+  const address = countyData[addressCounty];
+
+  const addressCity1 = address.cities[Math.floor(Math.random() * address.cities.length)];
+  const addressCity2 = address.cities[Math.floor(Math.random() * address.cities.length)];
+  const streetNumber = Math.floor(Math.random()*200)+1;
+  const blockNumber = Math.floor(Math.random()*20)+1;
+  const blockLetter = String.fromCharCode(65 + Math.floor(Math.random()*26));
+  const apartmentNumber = Math.floor(Math.random()*100)+1;
+
+  document.getElementById("addressline1_text").textContent = `Jud.${addressCounty} Orș.${addressCity1}`;
+  document.getElementById("addressline2_text").textContent = `Șos.${addressCity2} nr.${streetNumber} bl.${blockNumber}${blockLetter} ap.${apartmentNumber}`;
+  document.getElementById("issued_text").textContent = `SPCLEP ${addressCity1}`;
+
+
+  //const firstname = romanianFirstNames[Math.floor(Math.random()*romanianFirstNames.length)];
+
+  const lastname = romanianLastNames[Math.floor(Math.random()*romanianLastNames.length)];
+  //document.getElementById("firstname_text").textContent = firstname;
+  //document.getElementById("lastname_text").textContent = lastname;
+
+  const start = new Date(1965,0,1);
+  const end = new Date(); end.setFullYear(end.getFullYear()-18);
+  const birthDate = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+  const yy = String(birthDate.getFullYear()).slice(-2);
+  const mm = String(birthDate.getMonth()+1).padStart(2,'0');
+  const dd = String(birthDate.getDate()).padStart(2,'0');
+  const formattedDate = yy + mm + dd;
+  const yearFull = birthDate.getFullYear();
+
+  //let gender = (yearFull < 2000) ? (Math.random()<0.5?1:2) : (Math.random()<0.5?5:6);
+  let gender;
+	if (yearFull < 2000) {
+ 	 gender = (forcedSex === "F") ? 2 : 1;
+	} else {
+	  gender = (forcedSex === "F") ? 6 : 5;
+	}
+
+	let sex = (gender % 2 === 1) ? "M" : "F";
+  document.getElementById("sex_text").textContent = sex;
+   
+    const firstname = (sex === "M")
+  ? romanianMaleFirstNames[Math.floor(Math.random() * romanianMaleFirstNames.length)]
+  : romanianFemaleFirstNames[Math.floor(Math.random() * romanianFemaleFirstNames.length)];
+
+  document.getElementById("firstname_text").textContent = firstname;
+  document.getElementById("lastname_text").textContent = lastname;
+	
+  //const countyCodeNumeric = birthplace.cnp;
+  let series, countyCodeNumeric;
+  // Handle counties with multiple series or CNP codes
+if (Array.isArray(birthplace.series)) {
+  series = birthplace.series[Math.floor(Math.random() * birthplace.series.length)];
+} else {
+  series = birthplace.series;
+}
+
+if (Array.isArray(birthplace.cnp)) {
+  countyCodeNumeric = birthplace.cnp[Math.floor(Math.random() * birthplace.cnp.length)];
+} else {
+  countyCodeNumeric = birthplace.cnp;
+}
+
+  if (birthplaceCounty === "B") {
+  series = birthplace.series[Math.floor(Math.random() * birthplace.series.length)];
+  countyCodeNumeric = birthplace.cnp[Math.floor(Math.random() * birthplace.cnp.length)];
+  }
+  else if (birthplaceCounty === "BV" || birthplaceCounty === "BT") {
+  series = birthplace.series[Math.floor(Math.random() * birthplace.series.length)];
+  }
+  else {
+  series = birthplace.series;
+  countyCodeNumeric = birthplace.cnp;
+  }
+
+  const nnn = String(Math.floor(Math.random()*999)+1).padStart(3,'0');
+  const partialCNP = `${gender}${formattedDate}${countyCodeNumeric}${nnn}`;
+  const constanta = "279146358279";
+  let sum = 0;
+  for(let i=0;i<partialCNP.length;i++){ sum += parseInt(partialCNP[i])*parseInt(constanta[i]); }
+  let control = sum % 11;
+  if(control===10) control=1;
+  const cnp = partialCNP + control;
+  //document.getElementById("cnp_text").textContent = cnp;
+  const cnpElement = document.getElementById("cnp_text");
+  const firstChar = `<span style="color:red;">${cnp[0]}</span>`;
+  const middleChars = `<span style="color:blue;">${cnp.slice(1, -6)}</span>`;
+  const lastChars = `<span style="color:red;">${cnp.slice(-6)}</span>`;
+  cnpElement.innerHTML = firstChar + middleChars + lastChars;
+  
+
+  //const series = birthplace.series;
+  const number = String(Math.floor(Math.random()*900000)+100000);
+  document.getElementById("series_text").textContent = series;
+  document.getElementById("number_text").textContent = number;
+
+  // Validity dates
+  const today = new Date();
+  const randomPastOffset = Math.floor(Math.random() * 365 * 3);
+  const startDate = new Date(today.getTime() - randomPastOffset * 86400000);
+  const endDate = new Date(startDate);
+  endDate.setFullYear(endDate.getFullYear() + 10);
+  const fmt = (d,short=false)=>`${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${short?String(d.getFullYear()).slice(-2):d.getFullYear()}`;
+  document.getElementById("validity_text").textContent = `${fmt(startDate,true)}-${fmt(endDate,false)}`;
+
+  // MRZ lines
+// Format MRZ Line 1: IDROU + LASTNAME << FIRSTNAME <<< (padded to 36 chars)
+//const mrz1raw = `IDROU${lastname.toUpperCase()}<<${firstname.toUpperCase()}<<<`.padEnd(36, "<").slice(0, 36);
+const mrz1raw = `IDROU${removeDiacritics(lastname.toUpperCase())}<<${removeDiacritics(firstname.toUpperCase())}<<<`.padEnd(36, "<").slice(0, 36);
+
+
+// Format expiry date as YYMMDD
+const expiryYYMMDD = `${String(endDate.getFullYear()).slice(-2)}${String(endDate.getMonth() + 1).padStart(2, '0')}${String(endDate.getDate()).padStart(2, '0')}`;
+
+// Calculate check digits using ICAO standard
+const cd1 = checkDigit(series + number);         // Document number check digit
+const cd2 = checkDigit(formattedDate);           // Birthdate check digit
+const cd3 = checkDigit(expiryYYMMDD);            // Expiry date check digit
+
+// Format MRZ Line 2: includes check digits and structured fields
+const docSegment = `${series}${number}<${cd1}`;
+const birthSegment = `ROU${formattedDate}${cd2}`;
+const expirySegment = `${sex}${expiryYYMMDD}${cd3}`;
+const optionalSegment = `${gender}${countyCodeNumeric}${nnn}${control}`;
+
+const compositeForCheck = docSegment + birthSegment + expirySegment + optionalSegment;
+const cdFinal = checkDigit(compositeForCheck);
+
+let mrz2raw = (compositeForCheck + cdFinal).slice(0, 36);
+
+
+// Inject into DOM
+document.getElementById("mrz_line1").textContent = mrz1raw;
+document.getElementById("mrz_line2").textContent = mrz2raw;
+
+}
+
+//generateIDElements();
+addCustomImageAndText();
+
+function downloadPNG() {
+  html2canvas(document.getElementById("idCard")).then(canvas=>{
+    const link = document.createElement("a");
+    link.download = "mock_id.png";
+    link.href = canvas.toDataURL();
+    link.click();
+  });
+}
+
+refreshPortraits();
+generateIDElements();
+</script>
+</body>
+</html>
