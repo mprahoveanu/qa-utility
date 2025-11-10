@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salt Bank: CI - Model vechi - by M.P.</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 20px;
+  background: url('https://www.transparenttextures.com/patterns/wood-pattern.png') repeat;
+  background-color: #d2a679;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+h1 {
+  margin-bottom: 40px;
+}
+
+button {
+  padding: 8px 16px;
+  margin: 5px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.3);
+  background: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+button:hover { background: #41e5a1; }
+
+#cuiBox {
+  margin-top: 20px;
+  padding: 10px;
+  width: 220px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 18px;
+  border: 2px solid #0dcdc5;
+  border-radius: 5px;
+  background-color: #78fb83;
+  user-select: all; /* makes it easy to copy */
+}
+
+#logo {
+  margin-top: auto;
+  margin-bottom: 20px;
+  width: 200px; /* adjust size as needed */
+  height: auto;
+}
+</style>
+</head>
+<body>
+
+<h1>Salt Bank: QA Sidekick 🦹🏻‍♂️</h1>
+
+<button onclick="goToGenerator()">CI Generator</button>
+
+  <label for="baseCUI">Introduceți CUI (2-9 cifre):</label><br>
+
+  <input type="text" id="baseCUI" maxlength="9" pattern="\d+" placeholder="Ex: 123456"><br>
+  <button onclick="validateCUI()">Validează CUI</button>
+  <button onclick="generateRandomCUI()">Generează CUI aleatoriu</button>
+  <div id="cuiBox"></div>
+  <div class="result" id="output"></div>
+
+
+<img id="logo" src="salt-bank-logo.png" alt="Logo">
+
+<script>
+// Navigate to another page
+function goToGenerator() {
+  window.location.href = 'ci-generator-salt.html';
+}
+
+   function calculateControlDigit(cuiBase) {
+      const key = [7, 5, 3, 2, 1, 7, 5, 3, 2]; // reversed test key
+      let sum = 0;
+
+      for (let i = 0; i < cuiBase.length; i++) {
+        sum += parseInt(cuiBase[cuiBase.length - 1 - i]) * key[key.length - 1 - i];
+      }
+
+      let control = (sum * 10) % 11;
+      return control === 10 ? 0 : control;
+    }
+
+    function generateCUI() {
+      const base = document.getElementById("baseCUI").value.trim();
+      if (!/^\d{2,9}$/.test(base)) {
+        document.getElementById("output").innerText = "Introduceți între 2 și 9 cifre.";
+        return;
+      }
+
+      const controlDigit = calculateControlDigit(base);
+      const fullCUI = base + controlDigit;
+      document.getElementById("output").innerText = `CUI valid generat: ${fullCUI}`;
+    }
+
+    function validateCUI() {
+      const cui = document.getElementById("baseCUI").value.trim();
+      if (!/^\d{2,10}$/.test(cui)) {
+        document.getElementById("output").innerText = "Introduceți un CUI între 2 și 10 cifre.";
+        return;
+      }
+
+      const base = cui.slice(0, -1);
+      const control = parseInt(cui.slice(-1));
+      const expected = calculateControlDigit(base);
+
+      if (control === expected) {
+        document.getElementById("output").innerText = `CUI valid ✅`;
+      } else {
+        document.getElementById("output").innerText = `CUI invalid ❌ (cifra de control ar fi trebuit să fie ${expected})`;
+      }
+    }
+
+    function generateRandomCUI() {
+      const length = Math.floor(Math.random() * 8) + 2; // between 2 and 9 digits
+      let base = '';
+      for (let i = 0; i < length; i++) {
+        base += Math.floor(Math.random() * 10);
+      }
+
+      const controlDigit = calculateControlDigit(base);
+      const fullCUI = base + controlDigit;
+      //document.getElementById("output").innerText = `CUI aleatoriu generat: ${fullCUI}`;
+      document.getElementById("cuiBox").innerText = `${fullCUI}`;
+
+        // Display
+      document.getElementById('cuiBox').textContent = cui;
+    }
+
+</script>
+
+</body>
+</html>

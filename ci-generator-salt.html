@@ -149,6 +149,7 @@ button:hover { background: #41e5a1; }
 <body>
 
 <div style="display:flex; gap:10px; margin-bottom:50px; z-index: 5;">
+    <button onclick="goHome()">🏠</button>
   <button onclick="generateIDElements('M')">♂️ Generate Male ID</button>
   <button onclick="generateIDElements('F')">♀️ Generate Female ID</button>
   <button onclick="generateIDElements(),refreshPortraits()">🎲 Random ID</button>
@@ -192,6 +193,11 @@ button:hover { background: #41e5a1; }
 
 
 <script>
+
+function goHome() {
+  window.location.href = 'index.html';
+}
+
 const romanianFirstNames = [
   "ANDREI","IOANA","MIHAI","ELENA","GABRIEL","MARIA","STEFAN","ANA","CRISTIAN","ALINA",
   "VLAD","LAURA","DANIEL","ROXANA","ALEXANDRU","IRINA","PAUL","CRINA","CIPRIAN","OANA",
